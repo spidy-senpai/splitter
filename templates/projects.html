@@ -1,0 +1,350 @@
+{% extends "base_private.html" %}
+
+{% block title %}My Projects - Music Separator{% endblock %}
+
+{% block content %}
+<div class="projects-container">
+    <div class="projects-header">
+        <h1>My Projects</h1>
+        <a href="{{ url_for('create_project') }}" class="btn btn-primary">+ New Project</a>
+    </div>
+
+    <div class="projects-list">
+        {% if projects %}
+            {% for project in projects %}
+                <div class="project-card">
+                    <div class="project-info">
+                        <h3>{{ project.name }}</h3>
+                        <p class="project-desc">{{ project.description or 'No description' }}</p>
+                        <p class="project-meta">Created: {{ project.created_at.strftime('%b %d, %Y') }}</p>
+                        {% if project.status == 'completed' %}
+                            <p class="project-status completed">✓ Processed</p>
+                        {% elif project.status == 'processing' %}
+                            <p class="project-status processing">⏳ Processing...</p>
+                        {% elif project.status == 'failed' %}
+                            <p class="project-status failed">✗ Failed</p>
+                        {% else %}
+                            <p class="project-status new">New Project</p>
+                        {% endif %}
+                    </div>
+                    <div class="project-actions">
+                        <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-secondary">Open</a>
+                        <button class="btn btn-icon" onclick="openRenameModal('{{ project.id }}', '{{ project.name }}')" title="Rename">✏️</button>
+                        <button class="btn btn-danger" onclick="deleteProject('{{ project.id }}', '{{ project.name }}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No projects yet. Create your first project to get started!</p>
+                <a href="{{ url_for('create_project') }}" class="btn btn-primary">Create Project</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Rename Modal -->
+<div id="renameModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Rename Project</h2>
+            <button class="close" onclick="closeRenameModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="projectIdInput" value="">
+            <div class="form-group">
+                <label for="projectNameInput">New Project Name</label>
+                <input type="text" id="projectNameInput" class="form-input" placeholder="Enter new name">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeRenameModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitRename()">Rename</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.projects-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.projects-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.projects-header h1 {
+    margin: 0;
+    color: #333;
+}
+
+.projects-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.project-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    background: white;
+    transition: box-shadow 0.3s;
+}
+
+.project-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.project-info h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.project-desc {
+    color: #666;
+    font-size: 14px;
+    margin: 8px 0;
+}
+
+.project-meta {
+    color: #999;
+    font-size: 12px;
+    margin: 10px 0 0 0;
+}
+
+.project-status {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.project-status.completed {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.project-status.processing {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.project-status.failed {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.project-status.new {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.project-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.btn-icon {
+    padding: 8px 12px !important;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn-icon:hover {
+    background: #e0e0e0;
+}
+
+.btn-danger {
+    padding: 8px 12px !important;
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+    color: #c62828;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn-danger:hover {
+    background: #ffcdd2;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+}
+
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+</style>
+
+<script>
+function openRenameModal(projectId, projectName) {
+    document.getElementById('projectIdInput').value = projectId;
+    document.getElementById('projectNameInput').value = projectName;
+    document.getElementById('renameModal').style.display = 'block';
+    document.getElementById('projectNameInput').focus();
+    document.getElementById('projectNameInput').select();
+}
+
+function closeRenameModal() {
+    document.getElementById('renameModal').style.display = 'none';
+}
+
+function submitRename() {
+    const projectId = document.getElementById('projectIdInput').value;
+    const newName = document.getElementById('projectNameInput').value.trim();
+    
+    if (!newName) {
+        alert('Project name cannot be empty');
+        return;
+    }
+    
+    fetch(`/project/${projectId}/rename`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: newName })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(`Error: ${data.error || 'Failed to rename project'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to rename project');
+    });
+}
+
+function deleteProject(projectId, projectName) {
+    if (!confirm(`Are you sure you want to delete "${projectName}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    fetch(`/project/${projectId}/delete`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(`Error: ${data.error || 'Failed to delete project'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to delete project');
+    });
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('renameModal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

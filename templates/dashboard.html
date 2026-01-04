@@ -8,8 +8,145 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" >
 
-  <title>Flask Template</title>
+  <title>Music Separator - Dashboard</title>
 
+  <style>
+    main {
+      height: auto;
+      padding: 40px 20px;
+    }
+
+    .dashboard-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .welcome-section {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .welcome-section h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    .welcome-section p {
+      color: #666;
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #4CAF50;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .action-section {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 40px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .action-section h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+
+    .action-section p {
+      margin-bottom: 25px;
+      opacity: 0.95;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-buttons a {
+      display: inline-block;
+      padding: 12px 30px;
+      background: white;
+      color: #4CAF50;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .action-buttons a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .features-section {
+      margin-top: 50px;
+    }
+
+    .features-section h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .feature-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      margin-bottom: 15px;
+    }
+
+    .feature-card h3 {
+      color: #333;
+      margin: 15px 0 10px 0;
+    }
+
+    .feature-card p {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
 
   </head>
 
@@ -18,13 +155,66 @@
     {% include 'navbar_private.html' %}
 
     <main>
+      <div class="dashboard-container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+          <h1>🎵 Music Separator</h1>
+          <p>Extract individual instruments from your favorite songs</p>
+        </div>
 
-      <h1>Dashboard (Protected Page)</h1>
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+          <div class="stat-card">
+            <div class="stat-number">{{ total_projects | default(0) }}</div>
+            <div class="stat-label">Total Projects</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ processed_songs | default(0) }}</div>
+            <div class="stat-label">Songs Processed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ total_extracts | default(0) }}</div>
+            <div class="stat-label">Instruments Extracted</div>
+          </div>
+        </div>
 
-      <p>This is a protected page that requires authenication to view.</p> 
+        <!-- Action Section -->
+        <div class="action-section">
+          <h2>Ready to separate some music?</h2>
+          <p>Start by creating a new project or opening an existing one to upload your songs.</p>
+          <div class="action-buttons">
+            <a href="{{ url_for('create_project') }}">+ New Project</a>
+            <a href="{{ url_for('projects') }}">View All Projects</a>
+          </div>
+        </div>
 
-      <p>Use this template to create and customize more protected pages for your app.</p>
-
+        <!-- Features Section -->
+        <div class="features-section">
+          <h2>How It Works</h2>
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-icon">📁</div>
+              <h3>Create Project</h3>
+              <p>Create a new project to organize your music separation tasks</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🎵</div>
+              <h3>Upload Song</h3>
+              <p>Upload your audio file in MP3, WAV, or FLAC format</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">✨</div>
+              <h3>Extract Instruments</h3>
+              <p>Our AI extracts vocals, drums, guitar, piano, and more</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">⬇️</div>
+              <h3>Download Results</h3>
+              <p>Download each separated instrument as individual audio files</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <script src="{{ url_for('static', filename='login-auth.js') }}" type="module"></script>

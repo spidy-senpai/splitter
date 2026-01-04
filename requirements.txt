@@ -2,3 +2,10 @@ flask
 firebase_admin
 gunicorn
 python-dotenv
+spleeter
+librosa
+numpy
+scipy
+soundfile
+cloudinary
+requests

@@ -1,0 +1,104 @@
+{% extends "base_private.html" %}
+
+{% block title %}Create Project - Music Separator{% endblock %}
+
+{% block content %}
+<div class="create-project-container">
+    <div class="create-project-card">
+        <h1>Create New Project</h1>
+        <form method="POST" class="project-form">
+            <div class="form-group">
+                <label for="project-name">Project Name *</label>
+                <input type="text" id="project-name" name="project_name" required placeholder="My First Song Analysis">
+            </div>
+
+            <div class="form-group">
+                <label for="project-desc">Description</label>
+                <textarea id="project-desc" name="project_description" rows="4" placeholder="Add notes about this project..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Create Project</button>
+                <a href="{{ url_for('projects') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.create-project-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.create-project-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 40px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.create-project-card h1 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.project-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.form-actions button,
+.form-actions a {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+</style>
+{% endblock %}

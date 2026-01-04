@@ -1,0 +1,438 @@
+{% extends "base_private.html" %}
+
+{% block title %}{{ project.name }} - Music Separator{% endblock %}
+
+{% block content %}
+<div class="project-detail-container">
+    <div class="project-header">
+        <div class="project-title">
+            <a href="{{ url_for('projects') }}" class="back-link">← Back to Projects</a>
+            <h1>{{ project.name }}</h1>
+            <p class="project-description">{{ project.description or 'No description' }}</p>
+        </div>
+    </div>
+
+    <div class="project-content">
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Upload Song</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">🎵</div>
+                <p>Drag and drop your audio file here or click to browse</p>
+                <p class="upload-hint">Supported formats: MP3, WAV, FLAC (Max 50MB)</p>
+                <input type="file" id="audioFile" accept="audio/*" hidden>
+            </div>
+            <div id="uploadStatus" class="upload-status" style="display: none;"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <h2>Extracted Instruments</h2>
+            <div id="resultsList" class="results-list">
+                <p class="empty-results">Upload a song to extract instruments</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.project-detail-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.back-link {
+    color: #4CAF50;
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-block;
+    margin-bottom: 15px;
+    transition: color 0.3s;
+}
+
+.back-link:hover {
+    color: #45a049;
+}
+
+.project-header h1 {
+    margin: 10px 0 5px 0;
+    color: #333;
+}
+
+.project-description {
+    color: #666;
+    margin: 5px 0 0 0;
+    font-size: 14px;
+}
+
+.project-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.upload-section h2,
+.results-section h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #fafafa;
+}
+
+.upload-area:hover {
+    border-color: #4CAF50;
+    background: #f0f8f0;
+}
+
+.upload-area.dragover {
+    border-color: #4CAF50;
+    background: #e8f5e9;
+}
+
+.upload-icon {
+    font-size: 40px;
+    margin-bottom: 15px;
+}
+
+.upload-area p {
+    margin: 10px 0;
+    color: #666;
+}
+
+.upload-hint {
+    font-size: 12px;
+    color: #999;
+}
+
+.upload-status {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.upload-status.loading {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.upload-status.success {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.upload-status.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.result-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.result-item:hover {
+    border-color: #4CAF50;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
+    transform: translateY(-2px);
+}
+
+.result-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.result-name {
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.result-icon {
+    font-size: 24px;
+    min-width: 30px;
+}
+
+.result-status {
+    font-size: 12px;
+    color: #888;
+    margin-left: 34px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 16px;
+}
+
+.result-actions button {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: #333;
+}
+
+.result-actions button:hover {
+    border-color: #4CAF50;
+    color: #4CAF50;
+    background: #f9fff9;
+}
+
+.result-actions button:active {
+    transform: scale(0.98);
+}
+
+.empty-results {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .project-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+</style>
+
+<script>
+    const uploadArea = document.getElementById('uploadArea');
+    const audioFile = document.getElementById('audioFile');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const resultsList = document.getElementById('resultsList');
+
+    // Click to upload
+    uploadArea.addEventListener('click', () => audioFile.click());
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    // File input change
+    audioFile.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        if (!file.type.startsWith('audio/')) {
+            showStatus('Please select an audio file', 'error');
+            return;
+        }
+
+        if (file.size > 50 * 1024 * 1024) {
+            showStatus('File size exceeds 50MB limit', 'error');
+            return;
+        }
+
+        showStatus('Uploading and processing your song... This may take a few minutes', 'loading');
+        
+        // Upload file to backend
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const projectId = '{{ project.id }}';
+        
+        fetch(`/project/${projectId}/upload`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                displayResults(data.results);
+                showStatus('Song processed successfully!', 'success');
+            } else {
+                // Enhanced error message parsing
+                let errorMsg = data.error || 'Processing failed';
+                
+                // Check for Cloudinary-specific errors
+                if (errorMsg.includes('Cloudinary')) {
+                    errorMsg = `⚠️ Cloudinary Error: ${errorMsg}. Please check CLOUDINARY_SETUP.md`;
+                } else if (errorMsg.includes('authentication')) {
+                    errorMsg = `⚠️ Authentication Error: Check your Cloudinary credentials in .env file`;
+                } else if (errorMsg.includes('timeout')) {
+                    errorMsg = `⚠️ Upload Timeout: File may be too large. Try a smaller audio file.`;
+                } else if (errorMsg.includes('configured')) {
+                    errorMsg = `⚠️ Configuration Error: ${errorMsg}. See CLOUDINARY_SETUP.md guide.`;
+                }
+                
+                showStatus(`Error: ${errorMsg}`, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Upload error:', error);
+            showStatus('Upload failed. Please check your connection and try again.', 'error');
+        });
+    }
+
+    function displayResults(results) {
+        if (!results || Object.keys(results).length === 0) {
+            resultsList.innerHTML = '<p class="empty-results">❌ No instruments extracted. Please try a different song or check the audio file.</p>';
+            return;
+        }
+
+        // Filter out stems with errors or no URL
+        const validResults = Object.entries(results).filter(([key, data]) => data.url);
+        
+        if (validResults.length === 0) {
+            resultsList.innerHTML = '<p class="empty-results">❌ No instruments extracted. Please try a different song or check the audio file.</p>';
+            return;
+        }
+
+        resultsList.innerHTML = '';
+        
+        // Sort results by name for consistent display
+        validResults.sort((a, b) => a[1].name.localeCompare(b[1].name));
+        
+        for (const [stemKey, stemData] of validResults) {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            
+            const emoji = stemData.emoji || '🎵';
+            const name = stemData.name || stemKey;
+            const url = stemData.url;
+            
+            resultItem.innerHTML = `
+                <div class="result-info">
+                    <span class="result-name">
+                        <span class="result-icon">${emoji}</span>
+                        ${name}
+                    </span>
+                    <span class="result-status">✓ Successfully extracted</span>
+                </div>
+                <div class="result-actions">
+                    <button onclick="playAudio('${url}')">🔊 Play</button>
+                    <button onclick="downloadAudio('${url}', '${name}')">⬇️ Download</button>
+                </div>
+            `;
+            
+            resultsList.appendChild(resultItem);
+        }
+        
+        // Show count of extracted instruments
+        const count = validResults.length;
+        const summary = document.createElement('div');
+        summary.style.marginTop = '20px';
+        summary.style.padding = '12px';
+        summary.style.background = '#e8f5e9';
+        summary.style.borderRadius = '6px';
+        summary.style.color = '#2e7d32';
+        summary.style.textAlign = 'center';
+        summary.style.fontSize = '14px';
+        summary.style.fontWeight = '500';
+        summary.innerHTML = `✅ Successfully extracted ${count} instrument${count !== 1 ? 's' : ''}`;
+        resultsList.parentElement.appendChild(summary);
+    }
+
+    function playAudio(url) {
+        const audio = new Audio(url);
+        audio.play().catch(error => {
+            console.error('Error playing audio:', error);
+            alert('Could not play audio');
+        });
+    }
+
+    function downloadAudio(url, name) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${name}.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function showStatus(message, type) {
+        uploadStatus.textContent = message;
+        uploadStatus.className = `upload-status ${type}`;
+        uploadStatus.style.display = 'block';
+    }
+
+    // Load results on page load
+    let pollInterval = null;
+    
+    function loadResults() {
+        const projectId = '{{ project.id }}';
+        fetch(`/project/${projectId}/results`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Results data:', data);
+                if (data.status === 'completed' && data.results && Object.keys(data.results).length > 0) {
+                    displayResults(data.results);
+                    showStatus('Song processed successfully!', 'success');
+                    // Stop polling once complete
+                    if (pollInterval) clearInterval(pollInterval);
+                } else if (data.status === 'processing') {
+                    showStatus('Processing your song... This may take a few minutes. Checking for updates...', 'loading');
+                    // Keep polling while processing
+                    if (!pollInterval) {
+                        pollInterval = setInterval(loadResults, 3000);
+                    }
+                } else if (data.status === 'failed') {
+                    showStatus(`Processing failed: ${data.error || 'Unknown error'}`, 'error');
+                    if (pollInterval) clearInterval(pollInterval);
+                } else if (data.status === 'created') {
+                    // No processing yet, show empty message
+                    if (pollInterval) clearInterval(pollInterval);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading results:', error);
+                showStatus('Failed to load results. Please refresh the page.', 'error');
+            });
+    }
+    
+    window.addEventListener('load', () => {
+        loadResults();
+    });
+</script>
+{% endblock %}
+

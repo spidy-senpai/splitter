@@ -94,6 +94,27 @@ Distributed under the MIT License.
 Flask
 Firebase
 
+## Deploying to Vercel (Docker)
+
+- **Overview**: This project can be deployed to Vercel using a Docker build (the repository includes a `Dockerfile` and `vercel.json`). Vercel will use `@vercel/docker` to build and run the container.
+- **Prepare secrets**: Do NOT commit `firebase-auth.json` to the repo. Instead set required secrets in your Vercel project (for example `SECRET_KEY` and Firebase credentials). If you must use a credentials file, add it securely in Vercel or write it at runtime from an environment variable.
+- **Deploy (recommended)**: Install the Vercel CLI, authenticate, then run:
+
+```bash
+vercel login
+vercel --prod
+```
+
+Vercel will detect `vercel.json` and build the Docker image.
+
+If you want to test locally with Docker:
+
+```bash
+docker build -t flask-firebase-app .
+docker run -p 8080:8080 -e SECRET_KEY=your_secret_key flask-firebase-app
+```
+
+
 
 
 
